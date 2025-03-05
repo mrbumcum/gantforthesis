@@ -117,7 +117,7 @@ function App() {
         height="450px"
         allowFiltering={true}
         allowSorting={true}
-        editSettings={editSettings}
+        editSettings={{ allowEditing: true, mode: 'Auto', allowTaskbarEditing: true }}
         labelSettings={labelSettings}
       >
         <ColumnsDirective>
