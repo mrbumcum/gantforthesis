@@ -1,134 +1,154 @@
-import { GanttComponent, Inject, Edit, Filter, Sort, ColumnsDirective, ColumnDirective } from '@syncfusion/ej2-react-gantt';
+import { useState, useEffect } from 'react';
 import './App.css';
 
-// Sample data for the Gantt chart
-const projectData = [
-  {
-    TaskID: 1,
-    TaskName: 'Project Initiation',
-    StartDate: new Date('04/02/2023'),
-    EndDate: new Date('04/21/2023'),
-  },
-  {
-    TaskID: 2,
-    TaskName: 'Identify Site location',
-    StartDate: new Date('04/02/2023'),
-    Duration: 4,
-    Progress: 50,
-    ParentId: 1,
-  },
-  {
-    TaskID: 3,
-    TaskName: 'Perform Soil test',
-    StartDate: new Date('04/02/2023'),
-    Duration: 4,
-    Progress: 50,
-    ParentId: 1,
-    Predecessor: '2FS'
-  },
-  {
-    TaskID: 4,
-    TaskName: 'Soil test approval',
-    StartDate: new Date('04/02/2023'),
-    Duration: 4,
-    Progress: 50,
-    ParentId: 1,
-  },
-  {
-    TaskID: 5,
-    TaskName: 'Project Estimation',
-    StartDate: new Date('04/02/2023'),
-    EndDate: new Date('04/21/2023'),
-  },
-  {
-    TaskID: 6,
-    TaskName: 'Develop floor plan for estimation',
-    StartDate: new Date('04/04/2023'),
-    Duration: 3,
-    Progress: 50,
-    ParentId: 5,
-  },
-  {
-    TaskID: 7,
-    TaskName: 'List materials',
-    StartDate: new Date('04/04/2023'),
-    Duration: 3,
-    Progress: 50,
-    ParentId: 5,
-  },
-  {
-    TaskID: 8,
-    TaskName: 'Estimation approval',
-    StartDate: new Date('04/04/2023'),
-    Duration: 3,
-    Progress: 50,
-    ParentId: 5,
-    Predecessor: '7SS'
-  },
-];
+// Task interface
+interface Task {
+  id: number;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  parentId?: number;
+  progress?: number;
+  color?: string;
+  description?: string;
+}
 
-// Sample resources data
-const projectResources = [
-  { ResourceId: 1, ResourceName: 'Project Manager' },
-  { ResourceId: 2, ResourceName: 'Software Analyst' },
-  { ResourceId: 3, ResourceName: 'Developer' },
-  { ResourceId: 4, ResourceName: 'Testing Engineer' }
+// Project timeline data
+const projectData: Task[] = [
+  // Project Development Timeline
+  { id: 1, name: 'Project Development Timeline', startDate: new Date('2025-05-01'), endDate: new Date('2025-12-31'), color: '#3498db' },
+  
+  // Design and Prototyping
+  { id: 2, name: 'Design and Prototyping', startDate: new Date('2025-05-01'), endDate: new Date('2025-05-14'), color: '#2ecc71',
+    description: 'UX Design, Wireframes, and Architecture Mockup' },
+  
+  // Backend Development
+  { id: 6, name: 'Backend Development', startDate: new Date('2025-05-14'), endDate: new Date('2025-07-01'), color: '#e74c3c',
+    description: 'Node.js Server, LLM Integration, Database Design, Knowledge Base' },
+  
+  // Frontend Development
+  { id: 11, name: 'Frontend Development', startDate: new Date('2025-07-01'), endDate: new Date('2025-08-15'), color: '#f39c12',
+    description: 'React Setup, Component Development, Styling with HTML and Tailwind CSS' },
+  
+  // Testing and Iteration
+  { id: 15, name: 'Testing and Iteration', startDate: new Date('2025-08-15'), endDate: new Date('2025-10-01'), color: '#9b59b6',
+    description: 'API Integration, Integration Testing, Unit Testing' },
+  
+  // Deployment and Maintenance
+  { id: 19, name: 'Deployment and Maintenance', startDate: new Date('2025-10-01'), endDate: new Date('2025-12-01'), color: '#1abc9c',
+    description: 'Domain and Hosting, Dockerization' },
+  
+  // Feedback and Improvement
+  { id: 22, name: 'Feedback and Improvement', startDate: new Date('2025-12-01'), endDate: new Date('2025-12-31'), color: '#34495e',
+    description: 'Implement a system for user feedback and suggestions' },
+  
+  // Thesis Writing Timeline
+  { id: 24, name: 'Thesis Writing Timeline', startDate: new Date('2026-01-01'), endDate: new Date('2026-03-01'), color: '#16a085',
+    description: 'Introduction, Methodology, Results, Analysis, Conclusion' },
 ];
 
 function App() {
-  // Configure task fields mapping
-  const taskFields = {
-    id: 'TaskID',
-    name: 'TaskName',
-    startDate: 'StartDate',
-    duration: 'Duration',
-    progress: 'Progress',
-    parentID: 'ParentId',
-    dependency: 'Predecessor',
-    resourceInfo: 'Resources'
+  const [tasks, setTasks] = useState<Task[]>(projectData);
+  const [timeRange, setTimeRange] = useState({
+    start: new Date('2025-05-01'),
+    end: new Date('2026-03-01')
+  });
+  const [monthsToShow, setMonthsToShow] = useState<Date[]>([]);
+
+  // Generate months for the timeline
+  useEffect(() => {
+    const months: Date[] = [];
+    const currentDate = new Date(timeRange.start);
+    
+    while (currentDate <= timeRange.end) {
+      months.push(new Date(currentDate));
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+    
+    setMonthsToShow(months);
+  }, [timeRange]);
+
+  // Calculate task position and width based on dates
+  const calculateTaskPosition = (task: Task) => {
+    const totalDays = Math.ceil((timeRange.end.getTime() - timeRange.start.getTime()) / (1000 * 60 * 60 * 24));
+    const taskStartDays = Math.ceil((task.startDate.getTime() - timeRange.start.getTime()) / (1000 * 60 * 60 * 24));
+    const taskDuration = Math.ceil((task.endDate.getTime() - task.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    
+    const left = (taskStartDays / totalDays) * 100;
+    const width = (taskDuration / totalDays) * 100;
+    
+    return { left: `${left}%`, width: `${width}%` };
   };
 
-  // Configure label settings
-  const labelSettings = {
-    rightLabel: 'Resources'
+  // Get indentation level based on parent-child relationship
+  const getIndentLevel = (task: Task) => {
+    if (!task.parentId) return 0;
+    const parent = tasks.find(t => t.id === task.parentId);
+    return parent ? getIndentLevel(parent) + 1 : 1;
   };
 
-  // Configure edit settings
-  const editSettings = {
-    allowEditing: true,
-    mode: 'Auto',
-    allowTaskbarEditing: true
+  // Format date to display month and day
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  // Configure resource fields mapping
-  const resourceFields = {
-    id: 'ResourceId',
-    name: 'ResourceName',
+  // Format month for header
+  const formatMonth = (date: Date) => {
+    return `${date.toLocaleDateString('en-US', { month: 'short' })} ${date.toLocaleDateString('en-US', { year: 'numeric' })}`;
   };
 
   return (
     <div className="app-container">
       <h1>Thesis Proposal Timeline</h1>
-      <GanttComponent 
-        dataSource={projectData} 
-        taskFields={taskFields}
-        resourceFields={resourceFields}
-        resources={projectResources}
-        height="450px"
-        allowFiltering={true}
-        allowSorting={true}
-        editSettings={{ allowEditing: true, mode: 'Auto', allowTaskbarEditing: true }}
-        labelSettings={labelSettings}
-      >
-        <ColumnsDirective>
-          <ColumnDirective field='TaskID' width='80' />
-          <ColumnDirective field='TaskName' headerText='Task Name' width='250' />
-          <ColumnDirective field='StartDate' />
-          <ColumnDirective field='Duration' />
-          <ColumnDirective field='Progress' />
-        </ColumnsDirective>
-        <Inject services={[Edit, Filter, Sort]} />
-      </GanttComponent>
+      
+      <div className="gantt-chart expanded-view">
+        <div className="gantt-header">
+          <div className="gantt-task-info">Task</div>
+          <div className="gantt-timeline-header">
+            {monthsToShow.map((month, index) => (
+              <div key={index} className="gantt-month">
+                {formatMonth(month)}
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="gantt-body">
+          {tasks.map(task => (
+            <div key={task.id} className="gantt-row">
+              <div 
+                className="gantt-task-info expanded" 
+                style={{ paddingLeft: `${getIndentLevel(task) * 20}px` }}
+              >
+                <span className="task-name">{task.name}</span>
+                <span className="task-dates">
+                  {formatDate(task.startDate)} - {formatDate(task.endDate)}
+                </span>
+                {task.description && (
+                  <span className="task-description expanded">{task.description}</span>
+                )}
+              </div>
+              
+              <div className="gantt-timeline">
+                <div 
+                  className="gantt-bar"
+                  style={{
+                    ...calculateTaskPosition(task),
+                    backgroundColor: task.color || '#2c3e50',
+                  }}
+                >
+                  {task.progress !== undefined && (
+                    <div 
+                      className="gantt-progress" 
+                      style={{ width: `${task.progress}%` }}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
