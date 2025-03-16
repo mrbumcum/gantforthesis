@@ -16,10 +16,10 @@ interface Task {
 // Project timeline data
 const projectData: Task[] = [
   // Project Development Timeline
-  { id: 1, name: 'Project Development Timeline', startDate: new Date('2025-05-01'), endDate: new Date('2025-12-31'), color: '#3498db' },
+  { id: 1, name: 'Project Development Timeline', startDate: new Date('2025-04-30'), endDate: new Date('2025-12-30'), color: '#3498db' },
   
   // Design and Prototyping
-  { id: 2, name: 'Design and Prototyping', startDate: new Date('2025-05-01'), endDate: new Date('2025-05-14'), color: '#2ecc71',
+  { id: 2, name: 'Design and Prototyping', startDate: new Date('2025-04-30'), endDate: new Date('2025-05-14'), color: '#2ecc71',
     description: 'UX Design, Wireframes, and Architecture Mockup' },
   
   // Backend Development
@@ -50,8 +50,8 @@ const projectData: Task[] = [
 function App() {
   const [tasks, setTasks] = useState<Task[]>(projectData);
   const [timeRange, setTimeRange] = useState({
-    start: new Date('2025-05-01'),
-    end: new Date('2026-03-01')
+    start: new Date('2025-04-01'),
+    end: new Date('2026-03-31')
   });
   const [monthsToShow, setMonthsToShow] = useState<Date[]>([]);
 
